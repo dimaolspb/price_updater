@@ -65,8 +65,8 @@ class FabricsPriceUpdate():
         print('Идёт проверка соответствия названий столбцов в прайсе и в буфере')
         buffer_titles = set(df_fabrics_in_buffer.loc[start_row_in_buffer - 1])
         price_titles = set(df_fabrics_in_price.loc[start_row_in_price - 1])
-        print(buffer_titles)
-        print(price_titles)
+        #print(buffer_titles)
+        #print(price_titles)
         result = df_fabrics_in_buffer.loc[start_row_in_buffer - 1].isin(df_fabrics_in_price.loc[start_row_in_price - 1]).all()
         if result:
             print('\n')
@@ -88,11 +88,40 @@ class FabricsPriceUpdate():
         fabrics_in_buffer = set(df_fabrics_in_buffer.iloc[start_row_in_buffer:, cell_title_in_buffer[1]])
         to_delete = fabrics_in_buffer - fabrics_in_price
         to_add = fabrics_in_price - fabrics_in_buffer
+        to_delete = list(to_delete)
+        to_delete.sort()
+        to_add = list(to_add)
+        to_add.sort()
         print('удалить', to_delete)
         print('добавить', to_add)
 
+        fabrics_in_price = list(fabrics_in_price)
+        fabrics_in_price.sort()
+        fabrics_in_buffer = list(fabrics_in_buffer)
+        fabrics_in_buffer.sort()
+
+        # удалим лишние ткани (= строки)
+        result_to_delete = df_fabrics_in_buffer[df_fabrics_in_buffer[0].isin(to_delete)].index.tolist()
+        df_fabrics_in_buffer = df_fabrics_in_buffer.drop(result_to_delete)
+        # print('buffer', df_fabrics_in_buffer)
+
+        # найдём в price номера строк, в которых находятся элементы to_add
+        result_to_add = df_fabrics_in_price[df_fabrics_in_price[2].isin(to_add)].index.tolist()
+
+        # найдём в price номера столбцов, которые имеют те же названия, что и в буфере
+        buffer_titles = list(buffer_titles)
+        buffer_titles.sort()
+        print('buffer_titles', buffer_titles)
+        result_titles_in_price_as_in_buffer = [df_fabrics_in_price.columns.get_loc(col) for col in df_fabrics_in_price.columns if col in buffer_titles]
+        #result_titles_in_price_as_in_buffer = [df_fabrics_in_price.columns.get_loc(col) for col in ['ВИП    15%']]
+        print('result_titles_in_price_as_in_buffer', result_titles_in_price_as_in_buffer)
+
+        print('result_to_add', result_to_add)
+        #print(df_fabrics_in_price.iloc[result_to_add, buffer_titles])
+
+
 fabrics_price_update = FabricsPriceUpdate()
-fabrics_price_update.make_backup()
+#fabrics_price_update.make_backup()
 fabrics_price_update.actualize_fabrics_data_in_buffer()
 
 
